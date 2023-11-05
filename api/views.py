@@ -87,6 +87,7 @@ def add_resp_data(req:HttpRequest, format=None):
 
 
 def handler(req:HttpRequest, exception):
-  print("im in ")
+  # print("im in ")
   
   return render(req, "404.html", status=404)
+
