@@ -14,15 +14,19 @@ STATIC_URL            = '/static/'
 STATIC_ROOT           = os.path.join(BASE_DIR,'RootStaticFiels')
 STATICFILES_DIRS      = [os.path.join(BASE_DIR,'StatiFilesDirs')]
 MEDIA_URL             = '/media/'
-MEDIA_ROOT            = os.path.join(BASE_DIR, 'mediafiles')
+MEDIA_ROOT            = os.path.join(BASE_DIR, 'mediaRoot')
 CORS_ORIGIN_ALLOW_ALL = True
-LOGIN_REDIRECT_URL = '/'
+# LOGIN_REDIRECT_URL = '/'
 # EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 JAZZMIN_SETTINGS = {
-    "show_ui_builder" : False,
+    "show_ui_builder" : True,
     "copyright": "Omar Hosny",
     "custom_css": "main.css",
+    "site_icon": "yoo/Site_LOGO.png",
+    "site_brand": "Thoth",
+    "site_logo": "yoo/Site_LOGO.png",
+
 
     } 
 
@@ -41,7 +45,9 @@ INSTALLED_APPS = [
 'django.contrib.staticfiles',
 'rest_framework',
 'corsheaders',
-'api'
+'Thoth',
+"config"
+# "phone_field",
 ]
 
 MIDDLEWARE = [
@@ -66,13 +72,14 @@ TEMPLATES = [
 'context_processors': [
 'django.template.context_processors.debug',
 'django.template.context_processors.request',
+# "from django.template.context_processors.media",
+# "from django.template.context_processors.static",
 'django.contrib.auth.context_processors.auth',
 'django.contrib.messages.context_processors.messages',
 ],
 },
 },
 ]
-
 WSGI_APPLICATION = 'main.wsgi.application'
 DATABASES = {
 'default': {
@@ -96,7 +103,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-handler404 = 'api.views.handler'
+# handler404 = 'api.views.handler'
 
 ''' 
 

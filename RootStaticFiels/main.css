@@ -2,3 +2,13 @@
   /* display: ; */
 visibility: hidden;
 }
+
+.login-logo img{
+  max-width:400px;
+  max-height:400px;
+}
+
+.brand-link img.elevation-3{
+  border-radius: 0 !important;
+  box-shadow:0 0 0 black !important;
+}
