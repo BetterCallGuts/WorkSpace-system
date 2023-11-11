@@ -1,11 +1,12 @@
 from pathlib import Path
 import os
+from django.utils.html import mark_safe
 BASE_DIR              = Path(__file__).resolve().parent.parent
 SECRET_KEY            = 'django-insecure-@imh6cz9cmj99sdj34!ce!7@k+9#emb*_^=qudukfsa&p25'
 DEBUG                 = True
 ALLOWED_HOSTS         = ['*']
 LANGUAGE_CODE         = 'en-us'
-TIME_ZONE             = 'UTC'
+TIME_ZONE             = 'Egypt'
 USE_I18N              = True
 USE_L10N              = True
 USE_TZ                = True
@@ -16,6 +17,9 @@ STATICFILES_DIRS      = [os.path.join(BASE_DIR,'StatiFilesDirs')]
 MEDIA_URL             = '/media/'
 MEDIA_ROOT            = os.path.join(BASE_DIR, 'mediaRoot')
 CORS_ORIGIN_ALLOW_ALL = True
+USE_L10N = True
+USE_TZ = True  
+USE_I18N = True
 # LOGIN_REDIRECT_URL = '/'
 # EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
@@ -23,12 +27,26 @@ JAZZMIN_SETTINGS = {
     "show_ui_builder" : True,
     "copyright": "Omar Hosny",
     "custom_css": "main.css",
-    "site_icon": "yoo/Site_LOGO.png",
+    "site_icon": "yoo/favicon (3).ico",
     "site_brand": "Thoth",
-    "site_logo": "yoo/Site_LOGO.png",
+    "site_logo": "yoo/1 (1).png",
 
-
+    "welcome_sign": mark_safe("Thoth Business Hub <br> Enjoy"),
+    "icons" :{
+        "Thoth.Recp"         : "fas fa-file-signature",
+        "Thoth.Employee"     : "fas fa-head-side-mask",
+        "config.CourseType"  : "fas fa-file-signature",
+        "config.Clients"  : "fas fa-file-signature",
+        "Thoth.Course"       : "fas fa-compact-disc",
+        "config.JobPosition" : "fas fa-sort",
+        "auth"               : "fas fa-users-cog",
+        "auth.user"          : "fas fa-user",
+        "users.User"         : "fas fa-user",
+        "auth.Group"         : "fas fa-users",
+        "admin.LogEntry"     : "fas fa-file",
+    }
     } 
+    # <i class="fa-solid fa-magnifying-glass"></i>
 
 
 INSTALLED_APPS = [
@@ -37,6 +55,7 @@ INSTALLED_APPS = [
     # "jet",# dont forget the url in the main url 
     # "semantic_admin",
 "jazzmin",
+# "datetimewidget",
 'django.contrib.admin',
 'django.contrib.auth',
 'django.contrib.contenttypes',
@@ -51,6 +70,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "django.middleware.locale.LocaleMiddleware",
 'django.middleware.security.SecurityMiddleware',
 'django.contrib.sessions.middleware.SessionMiddleware',
 'django.middleware.common.CommonMiddleware',

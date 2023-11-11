@@ -12,4 +12,21 @@ class JobPosition(models.Model):
     
     return f"{self.job_title}"
   
+class CourseType(models.Model):
+  Name = models.CharField(max_length=255)
+  description = models.TextField(blank=True, null=True)
+
+  def __str__(self):
+    return f"{self.Name}"
   
+
+
+class Level(models.Model):
+  Level = models.CharField(max_length=255)
+  
+  def __str__(self):
+    
+    return f"{self.Level}"
+  
+
+
