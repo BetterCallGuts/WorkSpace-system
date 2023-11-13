@@ -1,5 +1,6 @@
 from django.contrib                import admin
 from django.contrib                import messages
+from config.models                 import CourseGroup
 from django.views.decorators.cache import never_cache
 from django.utils.html             import mark_safe
 from django.contrib.auth.models    import User, Group
@@ -13,6 +14,7 @@ Course,   Client,
 Employee, vacation,
 Absent,   Deduction, 
 Reward,   Instructors,
+datetime, ClintCourses
 )
 
 
@@ -20,21 +22,44 @@ Reward,   Instructors,
 # __________________
 class WithAlertAdminPage(admin.sites.AdminSite):
     # Dash board html page
+    def cheking_the_debt(self, request):
+      students =  Client.objects.all()
+      ppl_with_debt = []
+      for i in students:
+        if i.still_have_to_pay() == "He is Clear":
+          continue
+        ppl_with_debt.append(i)
+      if len(ppl_with_debt) ==0:
+          pass
+      else:
+          messages.add_message(
+        request,
+        messages.WARNING  ,
+        mark_safe(f"You have {len(ppl_with_debt)} clients with debt <a href='Thoth/client/?have_debt__exact=1'>click here</a> to see them")
+)
+      # return ppl_with_debt
+    # 
+    
+    
+    def cheking_the_day(self, req):
+      
+      
+      messages.add_message(
+        req,
+        messages.INFO,
+        "Yoooo"
+      )
+    # 
     @never_cache
     def index(self, request, extra_context=None):
-        students =  Client.objects.all()
-        ppl_with_debt = []
-        for i in students:
-          if i.still_have_to_pay() == "He is Clear":
-            continue
-          ppl_with_debt.append(i)
-        if len(ppl_with_debt) ==0:
-          pass
-        else:
-          messages.add_message(request,
-                messages.WARNING  ,
-                mark_safe(f"You have {len(ppl_with_debt)} clients with debt <a href='Thoth/client/?have_debt__exact=1'>click here</a> to see them")
-                )
+        self.cheking_the_debt(request)
+        # self.cheking_the_day(request)
+        
+        
+        
+        
+        
+        
         return super(WithAlertAdminPage, self).index(request, extra_context,)
 
 
@@ -58,10 +83,11 @@ class FilterClinetsByCourseType(admin.SimpleListFilter):
   # 
   def queryset(self, request, queryset):
     list_that_will_be_returned = []
+    cc = ClintCourses.objects.all()
     if self.value():
         for i in queryset:
-          for c in i.courses.all():
-            if c.coursetype.Name == self.value():
+          for c in cc.filter(the_client=i):
+            if c.the_course.coursetype.Name == self.value():
               list_that_will_be_returned.append(i.id)
               break
         return queryset.filter(id__in=list_that_will_be_returned)
@@ -78,17 +104,45 @@ class FilterClinetsByIntructors(admin.SimpleListFilter):
   # 
   def queryset(self, request, queryset):
     list_that_will_be_returned = []
+    cc                         = ClintCourses.objects.all()
     if self.value():
       # true
         for i in queryset:
-          for c in i.courses.all():
-            # print(c.Instructor.)
-            if c.Instructor.name  == self.value():
+          for c in cc.filter(the_client=i):
+            
+            if c.the_course.Instructor.name  == self.value():
               list_that_will_be_returned.append(i.id)
               break
         return queryset.filter(id__in=list_that_will_be_returned)
 
+class FilterClientByGroups(admin.SimpleListFilter):
 
+  title          = "Group"
+  parameter_name = "Group"
+
+  def lookups(self, req, model_admin):
+    i = CourseGroup.objects.all()
+    
+    x = ((s.name, f"{s.name}")  for s in i )
+
+    return x
+
+  def queryset(self, req, queryset):
+    list_that_will_be_returned = []
+
+    x = ClintCourses.objects.all()
+    if self.value():
+      for i in queryset:
+        
+        
+        courses_that_client_in = x.filter(the_client=i)
+        for k in courses_that_client_in:
+          if k.th_group.name == self.value():
+            list_that_will_be_returned.append(i.id)
+            break
+        
+      return queryset.filter(id__in=list_that_will_be_returned)
+      
 
 
 
@@ -106,6 +160,8 @@ class AbsentInLine(admin.StackedInline):
 class RewardInLine(admin.StackedInline):
   model = Reward
 
+class ClintCoursesInLine(admin.TabularInline):
+  model = ClintCourses
 
 
 
@@ -119,20 +175,31 @@ class RewardInLine(admin.StackedInline):
 
 
 class ClientAdmin(admin.ModelAdmin):
-  fields       = ("name", "phone_number",
-      "birth_day", "courses",
-      "total", "paid", "still_have_to_pay"
-      )
-  readonly_fields = ("total", "still_have_to_pay" )
-  search_fields = ( "name", "phone_number" )
-  list_display = (
-    "more",
-    "name", "phone_number", 
+  fields       = (
+    "name",
+    "phone_number",
     "birth_day",
     "total",
     "paid",
+    "still_have_to_pay"
+      )
+  readonly_fields = (
+    "total",
+    "still_have_to_pay"
+    )
+  search_fields = ( 
+  "name",
+  "phone_number" 
+  )
+  list_display = (
+    "more",
+    "name",
+    "phone_number", 
+    "total",
+    "paid",
     "still_have_to_pay",
-    "courses_in"
+    "courses_in",
+
     )
   list_editable = (
     "name",
@@ -142,8 +209,13 @@ class ClientAdmin(admin.ModelAdmin):
   list_display_links = ("more",)
   list_filter        = ('have_debt', 
         FilterClinetsByCourseType,
-        FilterClinetsByIntructors
+        FilterClinetsByIntructors,
+        FilterClientByGroups
         )
+  inlines = (
+    ClintCoursesInLine,
+
+  )
 # ________________
 class EmpAdmin(admin.ModelAdmin):
   inlines  = (
@@ -187,13 +259,76 @@ class EmpAdmin(admin.ModelAdmin):
 # ___________________
 class InstructorsAdminStyle(admin.ModelAdmin):
   list_display = (
-    "name", "phone_number",
-    "specialities"
+    "more",
+    "name",
+    "phone_number",
+    "specialities",
+    "salary",
+    "income",
     )
+  list_display_links = (
+    "more",
+    
+  )
+  list_editable = (
+    "name",
+    "phone_number"
+  )
   list_filter  = ("specialty", )
+  search_fields = (
+    "name",
+    "phone_number",
+
+  )
 # ________________________
 class CourseAdminStyle(admin.ModelAdmin):
-  list_display = ("coursetype", "Instructor","start_date", "end_date", "course_levels")
+  list_display = (
+  "more", "coursetype",
+  "Instructor",
+  "Day_per_week_",
+  "Percenage",
+  "clients_in_course", 
+  "income",
+  "course_levels",
+  "end_date",
+  "start_date", 
+  
+  )
+  list_display_links = (
+    "more",
+    )
+  list_editable      = (
+    "coursetype",
+    "Instructor",
+    "end_date",
+    "start_date",
+
+
+    
+  )
+  
+  list_filter = (
+    "Instructor",
+    "coursetype"
+  )
+  fields = (
+    "coursetype",
+    "levels",
+    "Day_per_week",
+    "groups",
+    "Instructor",
+    "per_for_inst",
+    "cost_forone",
+    "clients_in_course",
+    "income",
+    "start_date",
+    "end_date",
+    
+  )
+  readonly_fields = (
+    "clients_in_course",
+    "income"
+  )
 # _____________________________
 class PeapleAdminStyle(admin.ModelAdmin):
   list_display = ("name", "tickets", "he_debt",  "have_debt" )

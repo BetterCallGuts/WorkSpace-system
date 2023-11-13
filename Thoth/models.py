@@ -11,7 +11,7 @@ from config.models import         JobPosition
 
 # GLobal Vars
 app_label = "Thoth"
-HOST = os.environ.get("HOST", "http://127.0.0.1:8000/")
+HOST = os.environ.get("HOST", "http://192.168.1.62:4040/")
 
 # Models
 # ________________________
@@ -41,8 +41,6 @@ class Coffee(models.Model):
   # 
   class Meta:
         app_label = app_label
-  
-
 
 
 
@@ -50,12 +48,18 @@ class Coffee(models.Model):
 
 class Course(models.Model):
   # 
-  coursetype = models.ForeignKey("config.CourseType", on_delete=models.CASCADE)
-  start_date = models.DateField(default=datetime.datetime.now)
-  levels     = models.ManyToManyField("config.Level", related_name="levels", blank=True)
-  Instructor = models.ForeignKey("Instructors", on_delete=models.CASCADE, null=True, blank=True)
-  end_date   = models.DateField(default=datetime.datetime.now)
-  cost_forone= models.FloatField(blank=True, default=0, verbose_name="Course cost per person")
+  coursetype  = models.ForeignKey("config.CourseType", on_delete=models.CASCADE)
+  start_date  = models.DateField(default=datetime.datetime.now)
+  levels      = models.ManyToManyField("config.Level", related_name="levels", blank=True)
+  Instructor  = models.ForeignKey("Instructors", on_delete=models.CASCADE, null=True, blank=True)
+  end_date    = models.DateField(default=datetime.datetime.now)
+  cost_forone = models.FloatField(blank=True, default=0, verbose_name="Course cost per person")
+  Day_per_week= models.ManyToManyField("config.Days", related_name="Days", blank=True)
+  per_for_inst= models.FloatField(
+    default=0,
+    verbose_name="percentage for instructor",
+    )
+  groups      = models.ManyToManyField("config.CourseGroup", related_name="Group", blank=True)
   # 
   def __str__(self):
     return f"{self.coursetype}|start:{self.start_date}|end:{self.end_date}"
@@ -66,32 +70,58 @@ class Course(models.Model):
   def course_levels(self):
     levels_many_to_many = self.levels.all()
     return ", ".join([x.Level for x in levels_many_to_many])
+  # 
+  def income(self):
+    pple  = float(self.clients_in_course())
+    result =  (pple) * self.cost_forone
+    return result
+  # 
+  def Percenage(self):
+    return f"{self.per_for_inst}%"
+  # 
+  def more(self):
+    return "more"
+  # 
+  def clients_in_course(self):
+    pple = ClintCourses.objects.filter(the_course=self)
+    return f"{len(pple) }"
+
+
+  def Day_per_week_(self):
+    days = self.Day_per_week.all()
+    se = []
+    for i in days:
+      se.append(i.day)
+    if len(se) == 0:
+      return "You havent config the days"
+    
+    return ", ".join(se)
 
 
 class Client(models.Model):
   # 
   name           = models.CharField(max_length=255)
-  courses        = models.ManyToManyField(Course,  blank=True)
+  # courses        = models.ManyToManyField(Course,  blank=True)
   phone_number   = models.CharField(max_length=255)
   birth_day      = models.DateField(default=datetime.datetime.now)
-  paid           = models.FloatField(default=0, blank=True, verbose_name="Paid")
+  paid           = models.IntegerField(default=0, blank=True, verbose_name="Paid")
   have_debt      = models.BooleanField(default=True, )
   # 
   def total(self):
-    cost  = self.courses.all()
+    cost  = ClintCourses.objects.filter(the_client=self)
     result= 0
     for i in cost:
-      result += i.cost_forone
+      result += i.the_course.cost_forone
     return result
   # 
   def more(self):
     return "More"
   # 
   def courses_in(self):
-    x = self.courses.all()
+    x = ClintCourses.objects.filter(the_client=self)
     courses_type = []
     for i in x:
-      courses_type.append(i.coursetype.Name)
+      courses_type.append(i.the_course.coursetype.Name)
     if len(courses_type) == 0:
       return "He is not in course"
     return ", ".join(courses_type)
@@ -101,11 +131,14 @@ class Client(models.Model):
     if still_didt_pay == 0:
       return "He is Clear"
     return still_didt_pay
-  # 
+
   def __str__(self):
     return f"{self.name}"
   # 
   def save(self):
+    if self.paid == None:
+      self.paid  =0
+    super().save()
     if self.still_have_to_pay() == "He is Clear":
       self.have_debt = False
     else:
@@ -115,6 +148,15 @@ class Client(models.Model):
   class Meta:
     app_label = app_label
 
+
+class ClintCourses(models.Model):
+  
+  the_course = models.ForeignKey(Course, on_delete=models.CASCADE)
+  the_client = models.ForeignKey(Client, on_delete=models.CASCADE)
+  th_group   = models.ForeignKey('config.CourseGroup',verbose_name="Group", on_delete=models.SET_NULL, null=True, blank=True)
+
+  def __str__(self):
+    return f"{self.the_client.name}|{self.the_course.coursetype.Name}"
 
 
 class Service(models.Model):
@@ -131,13 +173,13 @@ class Instructors(models.Model):
   name         = models.CharField(max_length=255)
   phone_number = models.CharField(max_length=255, blank=True, null=True)
   specialty    = models.ManyToManyField("config.CourseType",related_name="speciality",blank=True)
+
   # 
   def __str__(self):
     return f"{self.name}"
   # 
   def specialities(self):
     data = self.specialty.all()
-    verbose_name = "lol"
     s = []
     for i in data:
       s.append(i.Name)
@@ -145,8 +187,29 @@ class Instructors(models.Model):
       return "Empty"
     return " ,".join(s)
   # 
+  def salary(self):
+    courses = Course.objects.filter(Instructor=self)
+    result = 0
+    for i in courses:
+      n  = i.income() * (i.per_for_inst / 100)
+      result += n
+      
+    return result
+    
+  def income(self):
+    courses =  Course.objects.filter(Instructor=self)
+    result = 0
+    for cour in courses:
+      result += cour.income()
+    return result
+  # 
+  def more(self):
+    return "more"
+  
+  
   class Meta:
     verbose_name = "Instructor"
+  
 
 
 # Employee section
@@ -173,6 +236,7 @@ class Absent(models.Model):
   # 
   Emp           = models.ForeignKey("Employee", on_delete=models.CASCADE)
   how_many_days = models.IntegerField(verbose_name="how many days") 
+  Reson         = models.TextField(verbose_name="reason", blank=True, default=" ")
   # 
   def __str__(self):
     return f"{self.how_many_days} day"
@@ -242,4 +306,6 @@ class Employee(models.Model):
   
   image_tag.short_description = 'Image'
   image_tag.allow_tags = True
+
+
 

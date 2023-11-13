@@ -3,7 +3,9 @@ from Thoth.admin    import final_boss
 from .models        import (
   JobPosition,
   CourseType,
-  Level
+  Level,
+  Days,
+  CourseGroup
   
   )
 
@@ -25,6 +27,7 @@ class CourseTypeAdminStyle(admin.ModelAdmin):
 final_boss.register(JobPosition, JobPosAdminStyle)
 final_boss.register(CourseType, CourseTypeAdminStyle)
 final_boss.register(Level)
+final_boss.register(CourseGroup)
 
 
 

@@ -65,7 +65,8 @@ INSTALLED_APPS = [
 'rest_framework',
 'corsheaders',
 'Thoth',
-"config"
+"config",
+# "livereload"
 # "phone_field",
 ]
 
