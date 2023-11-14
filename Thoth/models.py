@@ -7,7 +7,7 @@ from django.contrib import        admin
 import                            uuid
 import                            os
 from django.utils.html import     mark_safe
-from config.models import         JobPosition
+from config.models import         JobPosition, PaymentMethod
 
 # GLobal Vars
 app_label = "Thoth"
@@ -55,12 +55,23 @@ class Course(models.Model):
   end_date    = models.DateField(default=datetime.datetime.now)
   cost_forone = models.FloatField(blank=True, default=0, verbose_name="Course cost per person")
   Day_per_week= models.ManyToManyField("config.Days", related_name="Days", blank=True)
+  Voucher     = models.FloatField( blank=True, default=0, verbose_name="Depreciation")
   per_for_inst= models.FloatField(
+
     default=0,
     verbose_name="percentage for instructor",
     )
   groups      = models.ManyToManyField("config.CourseGroup", related_name="Group", blank=True)
   # 
+  
+  def save(self):
+    super().save()
+    if self.Voucher == None:
+      self.Voucher = 0
+    if self.cost_forone == None:
+      self.cost_forone = 0
+    super().save()
+  
   def __str__(self):
     return f"{self.coursetype}|start:{self.start_date}|end:{self.end_date}"
   # 
@@ -73,7 +84,14 @@ class Course(models.Model):
   # 
   def income(self):
     pple  = float(self.clients_in_course())
-    result =  (pple) * self.cost_forone
+    pple_in_course = ClintCourses.objects.filter(the_course=self)
+    result =  ((pple) * self.cost_forone) - self.Voucher
+    dont_repeat = []
+    for i in pple_in_course:
+      if i not in dont_repeat:
+        result -= i.the_client.voucher
+        dont_repeat.append(i)
+
     return result
   # 
   def Percenage(self):
@@ -103,16 +121,22 @@ class Client(models.Model):
   name           = models.CharField(max_length=255)
   # courses        = models.ManyToManyField(Course,  blank=True)
   phone_number   = models.CharField(max_length=255)
-  birth_day      = models.DateField(default=datetime.datetime.now)
+  birth_day      = models.DateField(default=datetime.datetime.now, blank=True, null=True)
   paid           = models.IntegerField(default=0, blank=True, verbose_name="Paid")
   have_debt      = models.BooleanField(default=True, )
+  payment_method = models.ForeignKey(PaymentMethod, on_delete=models.SET_NULL, null=True, blank=True)
+  voucher        = models.FloatField(default=0, blank=True, verbose_name="Voucher")
   # 
   def total(self):
     cost  = ClintCourses.objects.filter(the_client=self)
     result= 0
     for i in cost:
       result += i.the_course.cost_forone
-    return result
+    if self.voucher == 0 or self.voucher == None:
+      
+      return result
+    
+    return  result - self.voucher
   # 
   def more(self):
     return "More"
