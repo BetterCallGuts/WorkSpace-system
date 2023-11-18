@@ -16,7 +16,8 @@ Course,   Client,
 Employee, vacation,
 Absent,   Deduction, 
 Reward,   Instructors,
-datetime, ClintCourses
+datetime, ClintCourses,
+ClientScore
 
 )
 import signal, os
@@ -229,6 +230,10 @@ class ClintCoursesInLine(admin.TabularInline):
   model = ClintCourses
 
 
+class ClientScoresInLine(admin.StackedInline):
+  model = ClientScore
+
+
 
 
 
@@ -275,7 +280,8 @@ class ClientAdmin(admin.ModelAdmin):
     "paid",
     )
   list_display_links = ("more",)
-  list_filter        = ('have_debt', 
+  list_filter        = (
+        'have_debt', 
         FilterClinetsByCourseType,
         FilterClinetsByIntructors,
         FilterClientByGroups,
@@ -283,6 +289,7 @@ class ClientAdmin(admin.ModelAdmin):
         )
   inlines = (
     ClintCoursesInLine,
+    ClientScoresInLine
 
   )
 # ________________
@@ -417,12 +424,12 @@ class TicketAdminStyle(admin.ModelAdmin):
   list_editable      = ("name_of_ticket", "ticket_price", "he_paid")
 # _______________________________
 class CoffeeAdminStyle(admin.ModelAdmin):
-  list_display       = ("name", "cost_or_price", "how_much_sold","avilable", "more")
-  fields             = ("image_tag", "name", "image", "cost_or_price","how_much_sold", "avilable" )
+  list_display       = ("name", "cost_or_price", "how_much_sold","avilable","To_who",  "more")
+  fields             = ("image_tag", "name", "image", "cost_or_price","To_who", "how_much_sold", "avilable" )
   search_fields      = ("cost_or_price", "name", "how_much_sold") 
   list_display_links = ("more", ) 
   readonly_fields    = ('image_tag',)
-  list_filter        = ("avilable",)
+  list_filter        = ("avilable", "To_who")
   list_editable      = ("name", "cost_or_price", "how_much_sold")
 
 

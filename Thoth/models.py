@@ -10,7 +10,7 @@ from config.models import         JobPosition, PaymentMethod
 
 # GLobal Vars
 app_label = "Thoth"
-HOST = os.environ.get("HOST", "http://192.168.1.62:4040/")
+HOST = os.environ.get("HOST", "http://127.0.0.1:8000/")
 
 # Models
 # ________________________
@@ -23,11 +23,16 @@ class Token(models.Model):
 
 class Coffee(models.Model):
   # 
+  ch_clients = (
+    ("0", "Client"),
+    ("1", "Stuff"),
+  )
   name          = models.CharField(max_length=255 )
-  image         = models.ImageField()
+  image         = models.ImageField(blank=True)
   cost_or_price = models.IntegerField(help_text="Price")
   how_much_sold = models.IntegerField( default=0) 
   avilable      = models.BooleanField(default=True)
+  To_who        = models.CharField(max_length=1, choices=ch_clients, verbose_name="The consumer?", default="0")
   more          = models.CharField(default="More", max_length=255, editable=False)
   # 
   def __str__(self):
@@ -151,7 +156,7 @@ class Client(models.Model):
   # 
   def still_have_to_pay(self):
     still_didt_pay = float(self.total()) - float(self.paid)
-    if still_didt_pay == 0:
+    if still_didt_pay <= 0 :
       return "He is Clear"
     return still_didt_pay
 
@@ -172,11 +177,19 @@ class Client(models.Model):
     app_label = app_label
 
 
+
+class ClientScore(models.Model):
+  the_client   = models.ForeignKey(Client, on_delete=models.CASCADE, blank=True, null=True)
+  the_course   = models.ForeignKey(Course, on_delete=models.CASCADE, blank=True, null=True)
+  client_score = models.IntegerField()
+  max_score = models.IntegerField()
+  
 class ClintCourses(models.Model):
   
   the_course = models.ForeignKey(Course, on_delete=models.CASCADE)
   the_client = models.ForeignKey(Client, on_delete=models.CASCADE)
   th_group   = models.ForeignKey('config.CourseGroup',verbose_name="Group", on_delete=models.SET_NULL, null=True, blank=True)
+  the_level  = models.ForeignKey("config.Level", on_delete=models.SET_NULL,null=True, blank=True, verbose_name="Level")
 
   def __str__(self):
     return f"{self.the_client.name}|{self.the_course.coursetype.Name}"
