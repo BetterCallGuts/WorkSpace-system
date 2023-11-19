@@ -175,7 +175,18 @@ class Client(models.Model):
   # 
   class Meta:
     app_label = app_label
-
+  # 
+  def save_model(self, request, obj, form, changed):
+    if '_continue' in request.POST:
+        if self.paid == None:
+          self.paid  =0
+        super().save()
+        if self.still_have_to_pay() == "He is Clear":
+          self.have_debt = False
+        else:
+          self.have_debt = True
+        super().save()
+    return super().change_view(request, obj, form, changed)
 
 
 class ClientScore(models.Model):
