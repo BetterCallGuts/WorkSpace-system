@@ -10,25 +10,29 @@ from .models        import (
   PaymentMethod
   )
 
-days  = Days.objects.all()
-a = 0
-
-for i in days:
-  a += 1
 
 
-if a == 7:
-  pass
-else:
-  days  = [
-    "Monday", "Tuesday", "Wednesday", "Thursday",
-    "Friday", "Saturday", "Sunday"
-    
-          ]
+try:
+  days  = Days.objects.all()
+  a = 0
+
   for i in days:
-    b = Days.objects.create(day=i)
-    b.save()
+    a += 1
 
+
+  if a == 7:
+    pass
+  else:
+    days  = [
+      "Monday", "Tuesday", "Wednesday", "Thursday",
+      "Friday", "Saturday", "Sunday"
+      
+            ]
+    for i in days:
+      b = Days.objects.create(day=i)
+      b.save()
+except :
+  pass
 
 
 
