@@ -211,6 +211,34 @@ class FilterClientByLevel(admin.SimpleListFilter):
       return queryset.filter(id__in=list_that_will_be_returned)
     
 
+class FilterClientByTimeAdded(admin.SimpleListFilter):
+  
+  title          = "Time added"
+  parameter_name = "Time__added"
+
+  def lookups(self, req, model_admin):
+    i = Client.objects.all()
+    
+
+    
+    x = ((s.month_with_year(), f"{s.month_with_year()}")  for s in i )
+
+    return x
+
+  def queryset(self, req, queryset):
+    list_that_will_be_returned = []
+
+    
+    if self.value():
+      for i in queryset:
+        
+        if i.month_with_year() == self.value():
+          list_that_will_be_returned.append(i.pk)
+        
+        
+      return queryset.filter(id__in=list_that_will_be_returned)
+    
+
 
 # Stacked INline
 # _______________________________________
@@ -256,18 +284,21 @@ class ClientAdmin(admin.ModelAdmin):
     "voucher",
     "still_have_to_pay",
     "birth_day",
-    'Attnder'
+    "time_added",
+    'Attnder',
       )
   readonly_fields = (
     "total",
     "still_have_to_pay",
-    "Attnder"
+    "Attnder",
+
     )
   search_fields = ( 
   "name",
   "phone_number" 
   )
   list_display = (
+
     "more",
     "name",
     "phone_number", 
@@ -289,7 +320,8 @@ class ClientAdmin(admin.ModelAdmin):
         FilterClinetsByCourseType,
         FilterClinetsByIntructors,
         FilterClientByGroups,
-        FilterClientByLevel
+        FilterClientByLevel,
+        FilterClientByTimeAdded
         )
   inlines = (
     ClintCoursesInLine,

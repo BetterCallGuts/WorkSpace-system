@@ -4,7 +4,7 @@ from datetime import date, datetime
 from .models import ClintCourses
 
 def attender(req, pk):
-  if req.method == "POST":
+    if req.method == "POST":
           a = True
           ds = ""
           for i in req.POST:
@@ -21,11 +21,13 @@ def attender(req, pk):
     
     
     
-  try:
 
     the_course = ClintCourses.objects.get(pk=pk)
-    ds = the_course.Atten.split(",")[:-1]
-    # print(ds)
+    if the_course.Atten is None:
+      ds = []
+    else:
+      ds = the_course.Atten.split(",")[:-1]
+
     start_date = str(the_course.the_course.start_date).split("-")
     end_date   = str(the_course.the_course.end_date).split("-")
 
@@ -84,9 +86,7 @@ def attender(req, pk):
     return render(req, "atten.html", {"data":returned_date})
 
 
-  except Exception as e:
-    print("Exept happense :", e )
-    return redirect("/")
+  
 
 
 def redirectadmin(req:HttpRequest):

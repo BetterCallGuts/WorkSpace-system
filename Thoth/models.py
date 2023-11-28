@@ -130,6 +130,13 @@ class Client(models.Model):
   have_debt      = models.BooleanField(default=True, )
   payment_method = models.ForeignKey(PaymentMethod, on_delete=models.SET_NULL, null=True, blank=True)
   voucher        = models.FloatField(default=0, blank=True, verbose_name="Voucher")
+  time_added     = models.DateField(default=datetime.datetime.now,  verbose_name="Time added",)
+  # 
+  def month_with_year(self):
+    
+    
+    
+    return "-".join(str(self.time_added).split('-')[:-1])
   # 
   def total(self):
     cost  = ClintCourses.objects.filter(the_client=self)
@@ -205,8 +212,8 @@ class Client(models.Model):
       except:
         days = None
       
-      # print(reverse("attend"))
-      days_html = f"""
+
+        days_html = f"""
       <hr>
       <h2>
         {i.the_course.coursetype}
