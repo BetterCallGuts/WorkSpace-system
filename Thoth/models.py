@@ -7,6 +7,7 @@ import                            uuid
 import                            os
 from django.utils.html import     mark_safe
 from config.models import         JobPosition, PaymentMethod
+from django.urls import reverse
 
 # GLobal Vars
 app_label = "Thoth"
@@ -123,7 +124,6 @@ class Course(models.Model):
 class Client(models.Model):
   # 
   name           = models.CharField(max_length=255)
-  # courses        = models.ManyToManyField(Course,  blank=True)
   phone_number   = models.CharField(max_length=255)
   birth_day      = models.DateField(default=datetime.datetime.now, blank=True, null=True)
   paid           = models.IntegerField(default=0, blank=True, verbose_name="Paid")
@@ -187,7 +187,79 @@ class Client(models.Model):
           self.have_debt = True
         super().save()
     return super().change_view(request, obj, form, changed)
+  # 
+  def Attnder(self):
+    my_ = ClintCourses.objects.filter(the_client=self)
 
+    div = '''
+    
+    <div>
+    
+          '''
+    
+    for i in my_:
+
+      try:
+        
+        days = i.Atten.split(',')
+      except:
+        days = None
+      
+      # print(reverse("attend"))
+      days_html = f"""
+      <hr>
+      <h2>
+        {i.the_course.coursetype}
+      </h2> 
+      <a 
+        href='{reverse("attend",args=(i.pk,))}' 
+        target='popup'
+        >
+          Edit it
+        </a>
+        <br>
+        You havn't set it up yet  
+        <hr
+        > <br>"""
+      days_html = mark_safe(days_html)
+      
+
+      if days is not None:
+        the_cours_name = i.the_course.coursetype
+        days_html = f''' 
+        
+        <hr>
+        <h2>
+        {the_cours_name}
+        </h2>
+        <a 
+        href='{reverse("attend",args=(i.pk,))}' 
+        target='popup'
+        >
+          Edit it
+        </a>
+        '''
+        for m in days:
+          days_html += f"<p> {m}</p>"
+
+        days_html += '<hr>'
+        days_html = mark_safe(days_html)
+
+      div += mark_safe(days_html)
+    
+  
+    div += mark_safe("</div>")
+    div += mark_safe( ''' 
+          <script>
+    links = document.querySelectorAll('a[target=popup]');
+    
+    for ( link of links) {
+        link.addEventListener('click', ()=>{
+            window.open(link.getAttribute("href"), 'popup',' width=600,height=600'); return false; 
+        }) 
+    }
+          </script>''')
+    return mark_safe(div) 
 
 class ClientScore(models.Model):
   the_client   = models.ForeignKey(Client, on_delete=models.CASCADE, blank=True, null=True)
@@ -201,6 +273,7 @@ class ClintCourses(models.Model):
   the_client = models.ForeignKey(Client, on_delete=models.CASCADE)
   th_group   = models.ForeignKey('config.CourseGroup',verbose_name="Group", on_delete=models.SET_NULL, null=True, blank=True)
   the_level  = models.ForeignKey("config.Level", on_delete=models.SET_NULL,null=True, blank=True, verbose_name="Level")
+  Atten      = models.TextField(blank=True, null=True)
 
   def __str__(self):
     return f"{self.the_client.name}|{self.the_course.coursetype.Name}"
@@ -356,3 +429,4 @@ class Employee(models.Model):
 
 
 
+# 

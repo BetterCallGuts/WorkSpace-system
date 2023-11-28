@@ -1,96 +1,92 @@
 from django.shortcuts             import render,redirect
-from django.http                  import HttpRequest, JsonResponse, HttpResponse
-# from .models                      import Token
-# from rest_framework               import status
-# from rest_framework.decorators    import api_view
-# from rest_framework.response      import Response
-# from .serializer                  import PeapleSerializer, TicketSerializer, RecpSerializer, Peaple, Ticket, Recp
-# import json
-# @api_view(["GET"])
-# def get_resp_data(req:HttpRequest, format=None):
-#   token = req.GET.get("token", None)
-#   if token is not None:
-#     tokens= Token.objects.all()
-#     for i in tokens :
-#       # print(type(i), type( i.token))
-#       if str(token) == str(i.token):
-    
-#         row_recp_data = Recp.objects.all()
-#         ser_recp_data = RecpSerializer(row_recp_data, many=True)
-        
-#         return Response(ser_recp_data.data, status=status.HTTP_200_OK)
-    
-#     return Response({"status": "error", "message" : "Wrong token"}, status=status.HTTP_400_BAD_REQUEST)
-#   return Response({"status": "error", "message" : "No token"}, status=status.HTTP_406_NOT_ACCEPTABLE)
+from django.http                  import HttpRequest, HttpResponse
+from datetime import date, datetime
+from .models import ClintCourses
 
-# @api_view(["GET"])
-# def get_all_data(req:HttpRequest, format=None):
-#   token = req.GET.get("token", None)
-#   if token is not None:
-#     tokens= Token.objects.all()
-#     for i in tokens :
-#       # print(type(i), type( i.token))
-#       if str(token) == str(i.token):
-    
-#         row_recp_data = Recp.objects.all()
-#         row_pple_data = Peaple.objects.all()
-#         row_tick_data = Ticket.objects.all()
-#         # 
-#         ser_recp_data = RecpSerializer(row_recp_data, many=True)
-#         ser_pple_data = PeapleSerializer(row_pple_data, many=True)
-#         ser_tick_data = TicketSerializer(row_tick_data, many=True)
-#         qr = {
-#           "recp"  : ser_recp_data.data,
-#           "pple"  : ser_pple_data.data,
-#           "ticket": ser_tick_data.data
-#         }
-        
-#         return Response(qr, status=status.HTTP_200_OK)
-    
-#     return Response({"status": "error", "message" : "Wrong token"}, status=status.HTTP_400_BAD_REQUEST)
-#   return Response({"status": "error", "message" : "No token"}, status=status.HTTP_406_NOT_ACCEPTABLE)
-
-
-# @api_view(["GET"])
-# def add_resp_data(req:HttpRequest, format=None):
-#   token = req.GET.get("token", None)
-#   if token is not None:
-#     tokens= Token.objects.all()
-#     for i in tokens :
-#       # print(type(i), type( i.token))
-#       if str(token) == str(i.token):
-    
-#         data = req.GET.get("data", None)
-#         # print(data, type(data))
-        
-#         if data is not None:
-#           data = json.loads(data)
-#           # print(data, type(data))
+def attender(req, pk):
+  if req.method == "POST":
+          a = True
+          ds = ""
+          for i in req.POST:
+            if a:
+              a = False
+              continue
+            ds += f"{i},"
           
+          the_course = ClintCourses.objects.get(pk=pk)
+          the_course.Atten = ds
+          the_course.save()
 
-#           if True:
-            
-#             return Response({"status": "success", "message" : "Successfuly added to recp data"},status=status.HTTP_201_CREATED)
-#           return Response({"status": "error", "message" : "Invalid Data"}, status=status.HTTP_400_BAD_REQUEST)
+          return HttpResponse("<script>window.close()</script>")
+    
+    
+    
+  try:
 
+    the_course = ClintCourses.objects.get(pk=pk)
+    ds = the_course.Atten.split(",")[:-1]
+    # print(ds)
+    start_date = str(the_course.the_course.start_date).split("-")
+    end_date   = str(the_course.the_course.end_date).split("-")
 
+    start_date = [int(x) for x in start_date]
+    end_date   = [int(x) for x in end_date]
+    temp       = start_date
+    start_date = date(*start_date)
+    end_date   = date(*end_date)
+    
+    days       = end_date - start_date
+    days       = int(str(days).split(',')[0].replace('days', "").replace("day", ""))
+    returned_date = []
+    try:
+      add_month = 0 
+      remove_from_days = 0
+      temp_2 = temp
+      i = 0
+      b = 0
+      if_in = []
+      for g in the_course.the_course.Day_per_week.all():
+        if_in.append(g.day)
+      while True:
+        b+=1
+        ch = False
+        if temp_2[1 ]+ add_month > 12:
+          temp_2[1] = 1
+          add_month = 0
+          temp_2[0] += 1
+
+        try:
+          date_by_num = date(temp_2[0], temp_2[1 ]+ add_month, temp_2[2]+i - remove_from_days)
+
+          sentance = f"{date_by_num} - {date_by_num.strftime('%A')}"
+          if sentance in ds:
+            ch = True
+          if date_by_num.strftime('%A') in if_in:
+            returned_date.append({"name": sentance , 'ch':ch})
+
+           
+          if end_date == date_by_num:
+            break
+        
+        except ValueError:
+          add_month +=1
           
-          
-#         return Response({"status": "error", "message" : "Invalid parametars"}, status=status.HTTP_400_BAD_REQUEST)
-    
-    
-    
-#     return Response({"status": "error", "message" : "Wrong token"}, status=status.HTTP_400_BAD_REQUEST)
-#   return Response({"status": "error", "message" : "No token"}, status=status.HTTP_406_NOT_ACCEPTABLE)
+          temp_2[2]  = 0
+          remove_from_days = i
+        
+        i +=1
+        
+    except ValueError:
+
+        pass
 
 
+    return render(req, "atten.html", {"data":returned_date})
 
 
-# def handler(req:HttpRequest, exception):
-#   # print("im in ")
-  
-#   return render(req, "404.html", status=404)
-
+  except Exception as e:
+    print("Exept happense :", e )
+    return redirect("/")
 
 
 def redirectadmin(req:HttpRequest):

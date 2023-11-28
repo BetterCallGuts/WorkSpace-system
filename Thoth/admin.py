@@ -228,6 +228,8 @@ class RewardInLine(admin.StackedInline):
 
 class ClintCoursesInLine(admin.TabularInline):
   model = ClintCourses
+  # fields= ("the_course",'client_score')
+  exclude=('Atten',)
 
 
 class ClientScoresInLine(admin.StackedInline):
@@ -254,10 +256,12 @@ class ClientAdmin(admin.ModelAdmin):
     "voucher",
     "still_have_to_pay",
     "birth_day",
+    'Attnder'
       )
   readonly_fields = (
     "total",
-    "still_have_to_pay"
+    "still_have_to_pay",
+    "Attnder"
     )
   search_fields = ( 
   "name",
