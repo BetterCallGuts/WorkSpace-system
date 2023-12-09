@@ -244,24 +244,33 @@ class FilterClientByTimeAdded(admin.SimpleListFilter):
 # _______________________________________
 class VacationInLine(admin.StackedInline):
   model = vacation
+  extra = 0
 
 class DeductionInLine(admin.StackedInline):
   model = Deduction
+  extra = 0
+
 
 class AbsentInLine(admin.StackedInline):
   model = Absent
-  
+  extra = 0
+
 class RewardInLine(admin.StackedInline):
   model = Reward
+  extra = 0
+
 
 class ClintCoursesInLine(admin.TabularInline):
   model = ClintCourses
   # fields= ("the_course",'client_score')
   exclude=('Atten',)
+  extra = 0
+
 
 
 class ClientScoresInLine(admin.StackedInline):
   model = ClientScore
+  extra = 0
 
 
 
@@ -293,6 +302,7 @@ class ClientAdmin(admin.ModelAdmin):
     "Attnder",
 
     )
+  
   search_fields = ( 
   "name",
   "phone_number" 
@@ -375,8 +385,8 @@ class InstructorsAdminStyle(admin.ModelAdmin):
     "name",
     "phone_number",
     "specialities",
-    "salary",
-    "income",
+    "salary_this_month",
+    "income_this_month",
     )
   list_display_links = (
     "more",
@@ -391,6 +401,22 @@ class InstructorsAdminStyle(admin.ModelAdmin):
     "name",
     "phone_number",
 
+  )
+  fields = (
+    "name",
+    "phone_number",
+    "specialty",
+    "salary_this_month",
+    "income_this_month",
+    "total_salary",
+    "total_income",
+    
+  )
+  readonly_fields = (
+    "salary_this_month",
+    "income_this_month",
+    "total_salary",
+    "total_income",
   )
 # ________________________
 class CourseAdminStyle(admin.ModelAdmin):

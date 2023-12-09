@@ -98,6 +98,26 @@ class Course(models.Model):
         dont_repeat.append(i)
 
     return result
+  
+  def income_for_one_month(self):
+    pple  = float(self.clients_in_course_this_month())
+    
+    pple_in_course = ClintCourses.objects.filter(the_course=self)
+    
+    result =  ((pple) * self.cost_forone) - self.Voucher
+    dont_repeat = []
+
+    
+    for i in pple_in_course:
+      if i not in dont_repeat:
+        
+       
+        
+          result -= i.the_client.voucher
+          dont_repeat.append(i)
+
+    return result
+  
   # 
   def Percenage(self):
     return f"{self.per_for_inst}%"
@@ -108,6 +128,15 @@ class Course(models.Model):
   def clients_in_course(self):
     pple = ClintCourses.objects.filter(the_course=self)
     return f"{len(pple) }"
+  def clients_in_course_this_month(self):
+    pple = ClintCourses.objects.filter(the_course=self)
+    start= datetime.date(datetime.datetime.now().year, datetime.datetime.now().month, 1)
+    end  = datetime.date(datetime.datetime.now().year, datetime.datetime.now().month, datetime.datetime.now().day)
+    l    = []
+    for i in pple:
+      if start <= i.date_for <= end:
+        l.append(i)
+    return f"{len(l) }"
 
 
   def Day_per_week_(self):
@@ -135,14 +164,15 @@ class Client(models.Model):
   def month_with_year(self):
     
     
-    
+
     return "-".join(str(self.time_added).split('-')[:-1])
   # 
   def total(self):
     cost  = ClintCourses.objects.filter(the_client=self)
     result= 0
     for i in cost:
-      result += i.the_course.cost_forone
+      if i.the_course is not  None:
+        result += i.the_course.cost_forone
     if self.voucher == 0 or self.voucher == None:
       
       return result
@@ -156,7 +186,9 @@ class Client(models.Model):
     x = ClintCourses.objects.filter(the_client=self)
     courses_type = []
     for i in x:
-      courses_type.append(i.the_course.coursetype.Name)
+      if i.the_course is not None:
+        
+        courses_type.append(i.the_course.coursetype.Name)
     if len(courses_type) == 0:
       return "He is not in course"
     return ", ".join(courses_type)
@@ -228,7 +260,7 @@ class Client(models.Model):
         You havn't set it up yet  
         <hr
         > <br>"""
-      days_html = mark_safe(days_html)
+     
       
 
       if days is not None:
@@ -276,14 +308,15 @@ class ClientScore(models.Model):
   
 class ClintCourses(models.Model):
   
-  the_course = models.ForeignKey(Course, on_delete=models.CASCADE)
-  the_client = models.ForeignKey(Client, on_delete=models.CASCADE)
+  the_course = models.ForeignKey(Course, on_delete=models.CASCADE,)
+  the_client = models.ForeignKey(Client, on_delete=models.CASCADE,)
   th_group   = models.ForeignKey('config.CourseGroup',verbose_name="Group", on_delete=models.SET_NULL, null=True, blank=True)
   the_level  = models.ForeignKey("config.Level", on_delete=models.SET_NULL,null=True, blank=True, verbose_name="Level")
   Atten      = models.TextField(blank=True, null=True)
+  date_for   = models.DateField( default=datetime.datetime.now, editable=True)
 
   def __str__(self):
-    return f"{self.the_client.name}|{self.the_course.coursetype.Name}"
+    return f"{self.the_client.name}"
 
 
 class Service(models.Model):
@@ -314,7 +347,17 @@ class Instructors(models.Model):
       return "Empty"
     return " ,".join(s)
   # 
-  def salary(self):
+  def salary_this_month(self):
+    courses = Course.objects.filter(Instructor=self)
+    result = 0
+    for i in courses:
+      n  = i.income_for_one_month() * (i.per_for_inst / 100)
+      result += n
+      
+    return result
+  # 
+  
+  def total_salary(self):
     courses = Course.objects.filter(Instructor=self)
     result = 0
     for i in courses:
@@ -322,12 +365,19 @@ class Instructors(models.Model):
       result += n
       
     return result
-    
-  def income(self):
+  # 
+  def total_income(self):
     courses =  Course.objects.filter(Instructor=self)
     result = 0
     for cour in courses:
       result += cour.income()
+    return result
+  # 
+  def income_this_month(self):
+    courses =  Course.objects.filter(Instructor=self)
+    result = 0
+    for cour in courses:
+      result += cour.income_for_one_month()
     return result
   # 
   def more(self):
