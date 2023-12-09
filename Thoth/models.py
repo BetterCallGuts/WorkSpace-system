@@ -316,7 +316,7 @@ class ClintCourses(models.Model):
   date_for   = models.DateField( default=datetime.datetime.now, editable=True)
 
   def __str__(self):
-    return f"{self.the_client.name}"
+    return f"{self.the_client.name}|{self.the_course}"
 
 
 class Service(models.Model):
