@@ -107,11 +107,11 @@ class Course(models.Model):
     result =  ((pple) * self.cost_forone) - self.Voucher
     dont_repeat = []
 
-    
+
     for i in pple_in_course:
       if i not in dont_repeat:
         
-       
+        
         
           result -= i.the_client.voucher
           dont_repeat.append(i)
@@ -320,9 +320,8 @@ class ClintCourses(models.Model):
 
 
 class Service(models.Model):
-  # 
 
-  # 
+
   class Meta:
     app_label = app_label
 
@@ -333,7 +332,8 @@ class Instructors(models.Model):
   name         = models.CharField(max_length=255)
   phone_number = models.CharField(max_length=255, blank=True, null=True)
   specialty    = models.ManyToManyField("config.CourseType",related_name="speciality",blank=True)
-
+  # new
+  percent      = models.FloatField(verbose_name="Instructor percentage", default=0)
   # 
   def __str__(self):
     return f"{self.name}"
@@ -347,11 +347,14 @@ class Instructors(models.Model):
       return "Empty"
     return " ,".join(s)
   # 
+  
+  # 
   def salary_this_month(self):
     courses = Course.objects.filter(Instructor=self)
     result = 0
     for i in courses:
-      n  = i.income_for_one_month() * (i.per_for_inst / 100)
+      # new
+      n  = i.income_for_one_month() * (self.percent / 100)
       result += n
       
     return result
@@ -361,7 +364,7 @@ class Instructors(models.Model):
     courses = Course.objects.filter(Instructor=self)
     result = 0
     for i in courses:
-      n  = i.income() * (i.per_for_inst / 100)
+      n  = i.income() * (self.percent / 100)
       result += n
       
     return result

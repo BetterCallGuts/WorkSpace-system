@@ -406,6 +406,7 @@ class InstructorsAdminStyle(admin.ModelAdmin):
     "name",
     "phone_number",
     "specialty",
+    "percent",
     "salary_this_month",
     "income_this_month",
     "total_salary",
