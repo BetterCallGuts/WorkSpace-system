@@ -8,6 +8,8 @@ import                            os
 from django.utils.html import     mark_safe
 from config.models import         JobPosition, PaymentMethod
 from django.urls import reverse
+import qrcode
+
 
 # GLobal Vars
 app_label = "Thoth"
@@ -160,7 +162,7 @@ class Client(models.Model):
   payment_method = models.ForeignKey(PaymentMethod, on_delete=models.SET_NULL, null=True, blank=True)
   voucher        = models.FloatField(default=0, blank=True, verbose_name="Voucher")
   time_added     = models.DateField(default=datetime.datetime.now,  verbose_name="Time added",)
-  # 
+  myqr           = models.ImageField(upload_to="clientqrcodes", blank=True, editable=False)
   def month_with_year(self):
     
     
@@ -178,6 +180,18 @@ class Client(models.Model):
       return result
     
     return  result - self.voucher
+  # 
+  def myqr_code(self):
+    
+    if self.myqr== "":
+      res = qrcode.make(f"{HOST}make-sudent-attend-with-qr/{self.pk}")
+      
+      res.save(f"mediaRoot/clientqrcodes/{self.name}|{self.pk}.png")
+      
+      self.myqr = f"clientqrcodes/{self.name}|{self.pk}.png"
+      self.save()
+    
+    return mark_safe(f"<img alt='student qrcode' style='width:300px;height:300px;' src='{self.myqr.url}' />")
   # 
   def more(self):
     return "More"
@@ -313,7 +327,7 @@ class ClintCourses(models.Model):
   th_group   = models.ForeignKey('config.CourseGroup',verbose_name="Group", on_delete=models.SET_NULL, null=True, blank=True)
   the_level  = models.ForeignKey("config.Level", on_delete=models.SET_NULL,null=True, blank=True, verbose_name="Level")
   Atten      = models.TextField(blank=True, null=True)
-  date_for   = models.DateField( default=datetime.datetime.now, editable=True)
+  date_for   = models.DateField( default=datetime.datetime.now, editable=False)
 
   def __str__(self):
     return f"{self.the_client.name}|{self.the_course}"

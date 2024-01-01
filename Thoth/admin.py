@@ -11,12 +11,12 @@ from django.conf                   import settings
 from django.conf.urls.static       import static
 from config.models                 import CourseType, Level
 from .models                       import (
-Coffee,   Token, 
+Coffee, 
 Course,   Client,
 Employee, vacation,
 Absent,   Deduction, 
 Reward,   Instructors,
-datetime, ClintCourses,
+ClintCourses,
 ClientScore
 
 )
@@ -219,9 +219,12 @@ class FilterClientByTimeAdded(admin.SimpleListFilter):
   def lookups(self, req, model_admin):
     i = Client.objects.all()
     
-
+    x = []
+    for s in i :
+      if (s.month_with_year(), f"{s.month_with_year()}") in x:
+        continue
+      x.append((s.month_with_year(), f"{s.month_with_year()}"))
     
-    x = ((s.month_with_year(), f"{s.month_with_year()}")  for s in i )
 
     return x
 
@@ -294,12 +297,15 @@ class ClientAdmin(admin.ModelAdmin):
     "still_have_to_pay",
     "birth_day",
     "time_added",
+    "myqr_code",
     'Attnder',
       )
+  change_list_template = "change_list.html"
   readonly_fields = (
     "total",
     "still_have_to_pay",
     "Attnder",
+    "myqr_code"
 
     )
   
@@ -388,6 +394,7 @@ class InstructorsAdminStyle(admin.ModelAdmin):
     "salary_this_month",
     "income_this_month",
     )
+  
   list_display_links = (
     "more",
     
@@ -496,11 +503,14 @@ class CoffeeAdminStyle(admin.ModelAdmin):
   list_editable      = ("name", "cost_or_price", "how_much_sold")
 
 
+
 # Register models
 
 final_boss.register(User, UserAdmin)
 final_boss.register(Group, GroupAdmin)
+
 final_boss.register(Client,ClientAdmin)
+
 final_boss.register(Course, CourseAdminStyle)
 final_boss.register(Employee, EmpAdmin)
 final_boss.register(Instructors, InstructorsAdminStyle)

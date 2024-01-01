@@ -1,6 +1,5 @@
 from django.db import models
 from datetime import datetime
-# Create your models here.
 
 
 class JobPosition(models.Model):
@@ -54,7 +53,7 @@ class CashOut(models.Model):
   def __str__(self):
     
     return f"{self.Amount}|{self.time_added}"
-  
+
 
 
 class PaymentMethod(models.Model):

@@ -1,7 +1,9 @@
-from django.shortcuts             import render,redirect
-from django.http                  import HttpRequest, HttpResponse
-from datetime import date, datetime
-from .models import ClintCourses
+from django.shortcuts               import render,redirect
+from django.http                    import HttpRequest, HttpResponse
+from datetime                       import date, datetime
+from .models                        import ClintCourses, Client
+from django.contrib.auth.decorators import login_required
+from django.contrib.messages        import success
 
 def attender(req, pk):
     if req.method == "POST":
@@ -93,3 +95,47 @@ def redirectadmin(req:HttpRequest):
   
   
   return redirect("/Caffe/")
+
+
+
+
+
+def refresh_clients(req:HttpRequest):
+  clients__ = Client.objects.all()
+  errors = []
+  a = 0
+  for i in clients__:
+    try:
+      i.save()
+      a +=1
+    except:
+      errors.append(i.name)
+  
+  if len(errors) > 0 :
+    success(req, f"Successfully refreshed {a} client and {''.join(errors)} need some modify")
+  else:
+    success(req, f"Successfully refreshed {a} with no errors  ")
+    
+  
+  return redirect(f"{req.META['HTTP_REFERER']}")
+
+
+# 
+def attend_with_pk_qr(req:HttpRequest, pk):
+  
+  
+  the_student = Client.objects.get(pk=int(pk))
+  courses_student_in = ClintCourses.objects.filter(the_client=the_student)
+  for i in courses_student_in:
+    pass
+  return
+
+
+
+
+
+
+
+
+
+
